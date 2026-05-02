@@ -1,120 +1,97 @@
-# RAG-Chatbot-Backend-with-LangGraph-FAISS-OpenAI
-This project implements a Retrieval-Augmented Generation (RAG) chatbot backend using modern LLM orchestration tools.
+This project implements an intelligent Retrieval-Augmented Generation (RAG) pipeline using LangGraph, LangChain, and OpenAI models. It dynamically decides whether to answer from general knowledge or retrieve relevant information from multiple PDF documents before generating a response.
 
-It enables users to ask questions over a PDF document, where the system:
+🚀 Features
 
-Retrieves relevant content from the document
-Enhances the LLM response with context
-Produces accurate, grounded answers
+🔍 Dynamic Retrieval Decision
+Uses LLM to decide whether external document retrieval is required
+📚 Multi-PDF Knowledge Base
+Supports multiple documents (Company Policies, Profile, Pricing, etc.)
+🧠 Context-Aware Answering
+Generates answers strictly from retrieved context when needed
+🎯 Relevance Filtering
+Filters only useful documents before passing to the LLM
 
-The project focuses on backend orchestration using LangGraph, making it modular, extensible, and production-ready.
+🔄 Graph-Based Workflow
+Built using LangGraph for modular and scalable pipelines
 
-🧠 How It Works
-User Query
-    ↓
-LangGraph Agent (LLM + Tool Decision)
-    ↓
-RAG Tool Triggered
-    ↓
-FAISS Vector Store (Semantic Search)
-    ↓
-Relevant Chunks Retrieved
-    ↓
-LLM Generates Context-Aware Response
+⚡ FAISS Vector Store
+Fast similarity search for document retrieval
 
-⚙️ Tech Stack
-LLM & Orchestration: LangGraph, LangChain, OpenAI
-Embeddings: OpenAI Embeddings (text-embedding-3-small)
-Vector Database: FAISS
-Document Loader: PyPDFLoader
-Text Splitting: RecursiveCharacterTextSplitter
-Tooling: LangGraph ToolNode
-Environment Management: python-dotenv
+🏗️ Architecture
 
-✨ Key Features
-📄 Document Understanding (RAG)
-Loads PDF documents using PyPDFLoader
-Splits text into manageable chunks
-Stores embeddings in FAISS vector database
+The workflow is implemented as a LangGraph State Machine:
 
-🔍 Semantic Retrieval
-Retrieves top-k relevant chunks using similarity search
-Ensures context-aware and accurate responses
+START
+  ↓
+Decide Retrieval (LLM)
+  ↓
+ ┌───────────────┬─────────────────┐
+ ↓               ↓
+Retrieve Docs    Direct Answer
+ ↓
+Check Relevance (LLM)
+ ↓
+ ┌───────────────┬─────────────────┐
+ ↓               ↓
+Generate Answer  No Relevant Docs
+ ↓
+END
 
-🧠 Agentic Workflow (LangGraph)
-Uses StateGraph to manage flow
-Dynamically decides when to call RAG tool
-Maintains conversation state
+🛠️ Tech Stack
+LangChain
+LangGraph
+OpenAI GPT (gpt-4o-mini)
+FAISS (Vector DB)
+Python
+Pydantic
 
-🔧 Tool Integration
-📚 RAG Tool
-
-Retrieves relevant document context
-Returns:
-Query
-Context
-Metadata
 📂 Project Structure
-├── rag_chatbot.py        # Main LangGraph RAG pipeline
-├── intro-to-ml.pdf       # Source document
+├── main.py                  # Core pipeline logic
+├── data/
+│   ├── Company_Policies.pdf
+│   ├── Company_Profile.pdf
+│   ├── Product_and_Pricing.pdf
+├── .env                    # API keys
 ├── requirements.txt
-└── .env
+└── README.md
 
-🔌 Core Components
-1. Document Loading
-loader = PyPDFLoader("intro-to-ml.pdf")
-docs = loader.load()
+Example query:
 
-3. Text Splitting
-splitter = RecursiveCharacterTextSplitter(
-    chunk_size=1000,
-    chunk_overlap=200
-)
+result = chatbot.invoke({
+    "question": "What is the refund policy of NEXAAI?"
+})
 
-4. Embeddings + Vector Store
-embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-vectorstore = FAISS.from_documents(chunk, embeddings)
+print(result["answer"])
+🧩 Key Components
+1. Retrieval Decision
 
-6. Retriever
-retriever = vectorstore.as_retriever(
-    search_type="similarity",
-    search_kwargs={"k": 3}
-)
+Determines if external documents are needed:
+should_retrieve: bool
 
-7. RAG Tool
-Fetches relevant chunks from vector store
-Supplies context to LLM for grounded responses
+2. Document Retrieval
+Uses FAISS similarity search
+Top-K documents fetched
+3. Relevance Filtering
+LLM filters only useful documents
+4. Response Generation
+Two modes:
+Direct LLM response
+Context-based RAG response
+💡 Example Flow
 
-9. LangGraph Workflow
-chat_node → LLM response
-tools → executes RAG tool if needed
-Conditional routing using tools_condition
+Input:
 
-▶️ How to Run
-1. Install dependencies
-pip install -r requirements.txt
-2. Set environment variables
+What is the refund policy of NEXAAI?
 
-Create .env file:
+System Behavior:
 
-OPENAI_API_KEY=your_api_key_here
+Decides retrieval is required ✅
+Fetches relevant PDF chunks 📄
+Filters useful docs 🔍
+Generates contextual answer 🤖
 
-3. Run the script
-python rag_chatbot.py
-🧪 Example Use Cases
-“What is machine learning?”
-“Explain supervised learning from the document”
-“Summarize key concepts from the PDF”
-
-🚧 Future Improvements
-Add FastAPI interface for API access
-Build Streamlit UI for interaction
-Support multiple documents
-Deploy using Docker & AWS
-
-🎯 What I Learned
-Building RAG pipelines from scratch
-Using FAISS for vector similarity search
-Designing agentic workflows with LangGraph
-Integrating LLMs with external knowledge sources
-Structuring scalable AI backends
+📈 Future Improvements
+Add streaming responses
+Integrate frontend UI (Streamlit/React)
+Add memory for conversation history
+Support multiple vector DBs (Pinecone)
